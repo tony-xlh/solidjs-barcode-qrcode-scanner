@@ -5,7 +5,13 @@ import './styles.css';
 
 BarcodeReader.engineResourcePath = "https://cdn.jsdelivr.net/npm/dynamsoft-javascript-barcode@9.6.2/dist/";
 
-const Scanner: Component<{active:boolean, children: JSX.Element}> = (props:{active:boolean, children: JSX.Element}) => {
+export interface ScannerProps {
+  initialized?: () => void;
+  active:boolean;
+  children?: JSX.Element;
+}
+
+const Scanner: Component<ScannerProps> = (props:ScannerProps) => {
   let camera:CameraEnhancer;
   let reader:BarcodeReader;
   let cameraContainer:HTMLDivElement|undefined;
@@ -18,6 +24,9 @@ const Scanner: Component<{active:boolean, children: JSX.Element}> = (props:{acti
         await camera.setUIElement(cameraContainer);
       }
       reader = await BarcodeReader.createInstance();
+    }
+    if (props.initialized) {
+      props.initialized();
     }
   });
 
