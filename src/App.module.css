@@ -2,6 +2,12 @@
   text-align: center;
 }
 
+.CloseButton {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
 .logo {
   animation: logo-spin infinite 20s linear;
   height: 40vmin;

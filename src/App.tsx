@@ -1,25 +1,27 @@
-import type { Component } from 'solid-js';
+import { Component, createSignal } from 'solid-js';
 
-import logo from './logo.svg';
 import styles from './App.module.css';
+import Scanner from './components/Scanner';
 
 const App: Component = () => {
+  const [active,setActive] = createSignal(false);
+  const startScan = () => {
+    console.log("start scan");
+    setActive(true);
+  }
+
+  const stopScan = () => {
+    console.log("stop scan");
+    setActive(false);
+  }
+  
   return (
     <div class={styles.App}>
-      <header class={styles.header}>
-        <img src={logo} class={styles.logo} alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          class={styles.link}
-          href="https://github.com/solidjs/solid"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn Solid
-        </a>
-      </header>
+      <h1>Solidjs Barcode Scanner Demo</h1>
+      <button onClick={startScan}>Start Scanning</button>
+      <Scanner active={active()}>
+        <button class={styles.CloseButton} onClick={stopScan}>Close</button>
+      </Scanner>
     </div>
   );
 };
