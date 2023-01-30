@@ -1,5 +1,6 @@
 import { CameraEnhancer } from 'dynamsoft-camera-enhancer';
 import { BarcodeReader } from 'dynamsoft-javascript-barcode';
+import { TextResult } from 'dynamsoft-javascript-barcode/dist/types/interface/textresult';
 import { children, Component, createEffect, createSignal, JSX, onMount } from 'solid-js';
 import './styles.css';
 
@@ -7,6 +8,7 @@ BarcodeReader.engineResourcePath = "https://cdn.jsdelivr.net/npm/dynamsoft-javas
 
 export interface ScannerProps {
   initialized?: () => void;
+  onScanned?: (results:TextResult[]) => void;
   active:boolean;
   children?: JSX.Element;
 }
@@ -15,6 +17,8 @@ const Scanner: Component<ScannerProps> = (props:ScannerProps) => {
   let camera:CameraEnhancer;
   let reader:BarcodeReader;
   let cameraContainer:HTMLDivElement|undefined;
+  let interval:any;
+  let decoding = false;
   onMount(async () => {
     if (!camera) {
       BarcodeReader.license = "DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ=="; // trial license
@@ -32,16 +36,56 @@ const Scanner: Component<ScannerProps> = (props:ScannerProps) => {
 
   
   createEffect(() => {
-    console.log("create effect");
-    console.log(props.active);
+    const {active} = props; //deconstruct, see: https://github.com/solidjs/solid/discussions/749
     if (camera) {
-      if (props.active === true) {
+      if (active === true) {
         camera.open(true);
+        startDecoding();
       }else{
+        stopDecoding();
         camera.close(true);
       }
     }
   });
+
+  const startDecoding = () => {
+    if (interval) {
+      clearInterval(interval);
+    }
+    decoding = false;
+    interval = setInterval(captureAndDecode,100); //set an interval to read barcodes from camera video frames.
+  }
+
+  const stopDecoding = () => {
+    if (interval) {
+      clearInterval(interval);
+    }
+    decoding = false;
+  }
+   
+  const captureAndDecode = async () => {
+    if (!camera || !reader) {
+      return
+    }
+    if (camera.isOpen() === false) {
+      return;
+    }
+    if (decoding == true) {
+      return;
+    }
+    let frame = camera.getFrame();
+    if (frame) {
+      decoding = true; // set decoding to true so that the next frame will be skipped if the decoding has not completed.
+      let results = await reader.decode(frame);
+      if (results.length>0) {
+        stopDecoding();
+        if (props.onScanned) {
+          props.onScanned(results);
+        }
+      }
+      decoding = false;
+    }
+  };
 
   return (
     <div ref={cameraContainer} class="container" style="display:none;">
